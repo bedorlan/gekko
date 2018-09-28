@@ -8,3 +8,10 @@ up = 0.01
   result: 
      balance: 107.99624172,
      trades: 6,
+max { weight: 21,
+  up: 0.009000000000000001,
+  down: -0.006,
+  result: 
+     balance: 103.51105721,
+     trades: 4,
+
