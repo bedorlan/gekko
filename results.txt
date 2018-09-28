@@ -1,0 +1,10 @@
+my 12 minutes 10 periods
+max { weight: 21, short: 0.003, long: 0.006, result: 102.12270177 }
+dema 12minutes 10
+weight = 31
+[thresholds]
+down = -0.006
+up = 0.01
+  result: 
+     balance: 107.99624172,
+     trades: 6,
