@@ -94,7 +94,10 @@ async function main() {
             max((x, y) => x.performance - y.performance)
         )
         .subscribe(vars => {
-            console.log('max', prettierResult(vars))
+            const results = prettierResult(vars)
+            const prettyOutput = Object.keys(results).reduce((prev, curr) => `${prev}\n${curr}=${results[curr]}`, '')
+            console.log('max')
+            console.log(prettyOutput)
             logFile.end()
         })
         
