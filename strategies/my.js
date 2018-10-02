@@ -1,25 +1,25 @@
 // Source: https://raw.githubusercontent.com/imperator6/gekko/stable/strategies/EMA_OR_PRICE_DIV.js
 // Downloaded from: https://github.com/xFFFFF/Gekko-Strategies
 // helpers
-var _ = require('lodash');
-var log = require('../core/log.js');
+var _ = require('lodash')
+var log = require('../core/log.js')
 // log.debug = console.log
 
 // configuration
-var config = require('../core/util.js').getConfig();
-var settings = config.my;
+var config = require('../core/util.js').getConfig()
+var settings = config.my
 
 // let's create our own method
-var method = {};
+var method = {}
 
 // prepare everything our method needs
 method.init = function() {
-  this.name = 'my';
+  this.name = 'my'
 
-  this.requiredHistory = config.tradingAdvisor.historySize;
+  this.requiredHistory = this.tradingAdvisor.historySize
 
   // define the indicators we need
-  this.addIndicator('ema', 'EMA', settings.weight);
+  this.addIndicator('ema', 'EMA', settings.weight)
 }
 
 // what happens on every new candle?
@@ -32,8 +32,7 @@ method.update = function(candle) {
 
 // for debugging purposes: log the last calculated
 // EMAs and diff.
-method.log = function() {
-}
+method.log = function() {}
 
 method.check = function(candle) {
   const slope = this.current / this.prev
@@ -42,10 +41,9 @@ method.check = function(candle) {
 
   if (variation > settings.long) {
     this.advice('long')
-  
   } else if (variation < settings.short) {
     this.advice('short')
   }
 }
 
-module.exports = method;
+module.exports = method
