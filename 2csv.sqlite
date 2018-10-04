@@ -1,0 +1,6 @@
+.mode csv
+
+select datetime(start, 'unixepoch') as start,open,high,low,close,vwp as vwap,volume,trades
+from candles_USDT_XRP
+order by start
+;
