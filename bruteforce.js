@@ -129,7 +129,11 @@ async function main() {
         filter(x => x.result.performanceReport.trades >= 2),
         tap(x => {
           const y = prettierResult(x)
-          logFile.write(`${y.weight},${y.up},${y.down},${y.performance}\n`)
+          logFile.write(
+            `${y.weight},${y.up},${y.down},${y.long},${y.short},${
+              y.performance
+            }\n`,
+          )
           console.log(y)
         }),
         max((x, y) => x.performance - y.performance),
