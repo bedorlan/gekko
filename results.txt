@@ -9,3 +9,8 @@ weight=31
 long=0.0008
 short=-0.001
 
+
+my last 2 days
+weight=41
+long=0.0009
+short=-0.0001
