@@ -1,38 +1,21 @@
-import tensorflow as tf
-import tensorflow.contrib as tfcontrib
+import keras
 import numpy as np
 
-columns = [tfcontrib.feature_column.sequence_numeric_column('value')]
-
-# contrib.estimator.feature_column_lib._SequenceDenseColumn()
-# contrib.feature_column.sequence_numeric_column
-
-estimator = tfcontrib.estimator.RNNEstimator(
-    head=tfcontrib.estimator.regression_head(),
-    sequence_feature_columns=columns,
-    cell_type='lstm',
-    num_units=[4]
-)
-
-# dense_value_tensor = tf.constant([0, 2, 4, 6])
-# value_tensor = tfcontrib.layers.dense_to_sparse(dense_value_tensor)
-# value_tensor = tf.IndexedSlices(tf.constant(
-#     [2, 4, 6, 8]), tf.constant([1, 2, 3, 4]), tf.constant([4]))
-value_tensor = tf.SparseTensor(
-    [[1, 1], [2, 1], [3, 1], [4, 1]], [2, 4, 6, 8], [2, 4])
-print value_tensor
-print "yes"
-# tf.data.Dataset.from_tensor_slices
-# input_fn_2 = tf.estimator.inputs.numpy_input_fn(
-#     {'value': np.array([0, 2, 4, 6])}, shuffle=True, num_epochs=1)
+# return training data
 
 
-def input_fn():
-    features = {
-        'value': value_tensor
-    }
-    labels = [4, 1]
-    return features, labels
+def get_train():
+    X = np.array([0, 1, 2, 3, 4]).reshape((5, 1, 1))
+    y = np.array([1, 2, 3, 4, 5])
+    return X, y
 
 
-estimator.train(input_fn=input_fn)
+model = keras.models.Sequential()
+model.add(keras.layers.LSTM(10, input_shape=(1, 1)))
+model.add(keras.layers.Dense(1, activation='linear'))
+model.compile(loss='mse', optimizer='adam')
+X, y = get_train()
+model.fit(X, y, epochs=5000)
+
+yhat = model.predict(np.array([2, 4, 3]).reshape(3, 1, 1))
+print(yhat)
