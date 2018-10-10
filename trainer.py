@@ -3,6 +3,7 @@ import numpy
 import sqlite3
 import datetime
 import time
+import tensorflowjs
 
 
 def toUnix(dt):
@@ -21,31 +22,24 @@ order by start asc
 
 start = toUnix(datetime.datetime(2018, 10, 1))
 end = toUnix(datetime.datetime(2018, 10, 1, 1))
-raw_data = [row[0] for row in conn.execute(sql, (start, end))]
+# raw_data = [row[0] for row in conn.execute(sql, (start, end))]
+raw_data = range(0, 60)
 data = numpy.array(raw_data).reshape((6, 10, 1))
 print data
 x = data[:, :-1]
 y = data[:, -1]
-
 
 model = keras.models.Sequential()
 # stateful=True means that the states computed for the samples in one batch will be reused as initial states for the samples in the next batch.
 model.add(keras.layers.LSTM(10, input_shape=(9, 1)))
 model.add(keras.layers.Dense(1, activation='linear'))
 model.compile(loss='mse', optimizer='adam')
-model.fit(x, y, epochs=2000)
+model.fit(x, y, epochs=10000)
 
-test_data = [0.58195611,
-             0.58042025,
-             0.58042025,
-             0.58042025,
-             0.58042025,
-             0.58299986,
-             0.58023276,
-             0.58289949,
-             0.58202503,
-             0.58202503]
-test_data = test_data[:-1]
+tensorflowjs.converters.save_keras_model(model, 'models/')
+
+test_data = [13, 14, 15, 16, 17, 18, 19, 20, 21]
+#test_data = test_data[:-1]
 
 yhat = model.predict(numpy.array(test_data).reshape(1, 9, 1))
 print(yhat)
