@@ -6,9 +6,10 @@ import matplotlib.pyplot as plt
 sql = '''
 select start, open, high, low, close, volume, trades
 from candles_USDT_XRP
-where trades > 0
-and start >= (1540907640 - 604800 * 1)
-and start < (1540907640 - 604800 * 0)
+where 1 = 1
+and trades > 0
+and start >= (1540907700 - 60 * 60 * 24 * 7)
+--and start < (1540907700 - 604800 * 0)
 order by start asc
 --limit 1000
 '''
@@ -57,7 +58,7 @@ def add_will_go_up(rows):
     return rows
 
 
-def normalize(rows):
+def normalize_values(rows):
     prev_close = rows[0]['close']
     rows = rows[1:]
 
@@ -79,6 +80,20 @@ def normalize(rows):
     return rows
 
 
+def normalize_dates(rows):
+    for row in rows:
+        start = row['start']
+        date = datetime.fromtimestamp(start)
+
+        time = date.hour * 60 + date.minute
+        weekday = date.weekday()
+
+        row['time'] = time
+        row['weekday'] = weekday
+
+    return rows
+
+
 def main():
     conn = sqlite3.connect('../history/poloniex_0.1.db')
     conn.row_factory = sqlite3.Row
@@ -87,14 +102,15 @@ def main():
 
     rows = [dict(row) for row in rows]
     rows = add_will_go_up(rows)
-    rows = normalize(rows)
+    rows = normalize_values(rows)
+    rows = normalize_dates(rows)
 
-    x = [row['start'] for row in rows]
-    y = [row['close'] for row in rows]
-    c = [('r' if row['will_go_up'] == 1 else 'b') for row in rows]
-    plt.scatter(x, y, c=c)
-    plt.plot(x, y)
-    plt.show()
+    # x = [row['start'] for row in rows]
+    # y = [row['close'] for row in rows]
+    # c = [('r' if row['will_go_up'] == 1 else 'b') for row in rows]
+    # plt.scatter(x, y, c=c)
+    # plt.plot(x, y)
+    # plt.show()
 
 
 main()
