@@ -55,9 +55,9 @@ def add_will_go_up(rows):
             'high'], row['low'], row['close'], row['volume'], row['trades']
 
         date = datetime.fromtimestamp(start)
-        c = 0
+        will_go_up = 0
         rows[i] = dict(row)
-        rows[i]['will_go_up'] = c
+        rows[i]['will_go_up'] = will_go_up
 
         if prev_close is None:
             prev_close = close
@@ -71,9 +71,9 @@ def add_will_go_up(rows):
         prev_close = close
 
         if will_go_up:
-            c = 1
+            will_go_up = 1
 
-        rows[i]['will_go_up'] = c
+        rows[i]['will_go_up'] = will_go_up
 
 
 def main():
