@@ -75,15 +75,13 @@ def add_will_go_up(rows):
 
         rows[i]['will_go_up'] = c
 
-    return rows
-
 
 def main():
     conn = sqlite3.connect('../history/poloniex_0.1.db')
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     rows = c.execute(sql).fetchall()
-    rows = add_will_go_up(rows)
+    add_will_go_up(rows)
     # print rows
     x = [row['start'] for row in rows]
     y = [row['close'] for row in rows]
