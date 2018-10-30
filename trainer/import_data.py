@@ -7,8 +7,8 @@ sql = '''
 select start, open, high, low, close, volume, trades
 from candles_USDT_XRP
 where trades > 0
-and start >= (1540907640 - 604800 * 2)
-and start < (1540907640 - 604800 * 1)
+and start >= (1540907640 - 604800 * 1)
+and start < (1540907640 - 604800 * 0)
 order by start asc
 --limit 1000
 '''
@@ -25,7 +25,7 @@ def search_up(i, rows):
             start_up = None
             break
 
-        (future_start, _, _, _, future_close, _, _) = rows[j]
+        future_start, future_close = rows[j]['start'], rows[j]['close']
         if future_start - start > 60 * 60:
             start_up = None
             break
@@ -49,39 +49,34 @@ def create_windows(y, window_size):
 
 
 def add_will_go_up(rows):
-    for i, row in enumerate(rows):
-        rows[i] = dict(row)
+    for i, _ in enumerate(rows):
         will_go_up = search_up(i, rows)
         will_go_up = 1 if will_go_up else 0
         rows[i]['will_go_up'] = will_go_up
 
+    return rows
+
 
 def normalize(rows):
-    prev_close = None
-    for i, row in enumerate(rows):
-        start, open, high, low, close, volume, trades = row['start'], row['open'], row[
-            'high'], row['low'], row['close'], row['volume'], row['trades']
+    prev_close = rows[0]['close']
+    rows = rows[1:]
 
-        date = datetime.fromtimestamp(start)
-        will_go_up = 0
-        rows[i] = dict(row)
-        rows[i]['will_go_up'] = will_go_up
-
-        if prev_close is None:
-            prev_close = close
-            continue
+    for row in rows:
+        open, high, low, close = row['open'], row['high'], row['low'], row['close']
 
         new_open = open / prev_close
         new_high = high / prev_close
         new_low = low / prev_close
         new_close = close / prev_close
-        will_go_up = search_up(i, rows)
+
+        row['open'] = new_open
+        row['high'] = new_high
+        row['low'] = new_low
+        row['close'] = new_close
+
         prev_close = close
 
-        if will_go_up:
-            will_go_up = 1
-
-        rows[i]['will_go_up'] = will_go_up
+    return rows
 
 
 def main():
@@ -89,8 +84,11 @@ def main():
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     rows = c.execute(sql).fetchall()
-    add_will_go_up(rows)
-    # print rows
+
+    rows = [dict(row) for row in rows]
+    rows = add_will_go_up(rows)
+    rows = normalize(rows)
+
     x = [row['start'] for row in rows]
     y = [row['close'] for row in rows]
     c = [('r' if row['will_go_up'] == 1 else 'b') for row in rows]
