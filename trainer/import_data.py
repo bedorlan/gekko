@@ -49,6 +49,14 @@ def create_windows(y, window_size):
 
 
 def add_will_go_up(rows):
+    for i, row in enumerate(rows):
+        rows[i] = dict(row)
+        will_go_up = search_up(i, rows)
+        will_go_up = 1 if will_go_up else 0
+        rows[i]['will_go_up'] = will_go_up
+
+
+def normalize(rows):
     prev_close = None
     for i, row in enumerate(rows):
         start, open, high, low, close, volume, trades = row['start'], row['open'], row[
