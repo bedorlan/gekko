@@ -2,8 +2,6 @@ import sqlite3
 from datetime import datetime
 import matplotlib.pyplot as plt
 
-conn = sqlite3.connect('../history/poloniex_0.1.db')
-c = conn.cursor()
 
 sql = '''
 select start, open, high, low, close, volume, trades
@@ -15,12 +13,11 @@ order by start asc
 --limit 1000
 '''
 
-rows = c.execute(sql).fetchall()
 # __import__('ipdb').set_trace()
 
 
-def search_up(i):
-    (start, _, _, _, close, _, _) = rows[i]
+def search_up(i, rows):
+    start, close = rows[i]['start'], rows[i]['close']
     start_up = None
     j = i + 1
     while True:
@@ -47,31 +44,53 @@ def search_up(i):
     return start_up is not None
 
 
-prev_close = None
-x = [None] * len(rows)
-y = [None] * len(rows)
-c = [None] * len(rows)
-for i, (start, open, high, low, close, volume, trades) in enumerate(rows):
-    date = datetime.fromtimestamp(start)
-    x[i] = start
-    y[i] = close
-    c[i] = 'b'
+def create_windows(y, window_size):
+    return [y[i:][:window_size] for i, _ in enumerate(y)][:-window_size+1]
 
-    if prev_close is None:
+
+def add_will_go_up(rows):
+    prev_close = None
+    for i, row in enumerate(rows):
+        start, open, high, low, close, volume, trades = row['start'], row['open'], row[
+            'high'], row['low'], row['close'], row['volume'], row['trades']
+
+        date = datetime.fromtimestamp(start)
+        c = 0
+        rows[i] = dict(row)
+        rows[i]['will_go_up'] = c
+
+        if prev_close is None:
+            prev_close = close
+            continue
+
+        new_open = open / prev_close
+        new_high = high / prev_close
+        new_low = low / prev_close
+        new_close = close / prev_close
+        will_go_up = search_up(i, rows)
         prev_close = close
-        continue
 
-    new_open = open / prev_close
-    new_high = high / prev_close
-    new_low = low / prev_close
-    new_close = close / prev_close
-    will_go_up = search_up(i)
-    prev_close = close
+        if will_go_up:
+            c = 1
 
-    if will_go_up:
-        c[i] = 'r'
+        rows[i]['will_go_up'] = c
 
-# print x, y, c
-plt.scatter(x, y, c=c)
-plt.plot(x, y)
-plt.show()
+    return rows
+
+
+def main():
+    conn = sqlite3.connect('../history/poloniex_0.1.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    rows = c.execute(sql).fetchall()
+    rows = add_will_go_up(rows)
+    # print rows
+    x = [row['start'] for row in rows]
+    y = [row['close'] for row in rows]
+    c = [('r' if row['will_go_up'] == 1 else 'b') for row in rows]
+    plt.scatter(x, y, c=c)
+    plt.plot(x, y)
+    plt.show()
+
+
+main()
