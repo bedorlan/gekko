@@ -1,5 +1,10 @@
+import os
+import json
 import sqlite3
 from datetime import datetime
+import numpy
+import keras
+from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 
 
@@ -8,13 +13,11 @@ select start, open, high, low, close, volume, trades
 from candles_USDT_XRP
 where 1 = 1
 and trades > 0
-and start >= (1540907700 - 60 * 60 * 24 * 7)
+and start >= (1540907700 - 60 * 60 * 24 * 30) -- 1 month
 --and start < (1540907700 - 604800 * 0)
 order by start asc
 --limit 1000
 '''
-
-# __import__('ipdb').set_trace()
 
 
 def search_up(i, rows):
@@ -94,6 +97,30 @@ def normalize_dates(rows):
     return rows
 
 
+window_size = 1440
+features = 8
+MODEL_FILE = 'models/out.model'
+
+
+def create_model():
+    model = keras.Sequential()
+    model.add(keras.layers.LSTM(100, input_shape=(
+        window_size, features), return_sequences=True))
+    model.add(keras.layers.Flatten())
+    model.add(keras.layers.Dropout(0.2))
+    model.add(keras.layers.Dense(1, activation='linear'))
+    model.compile(loss='mse', optimizer='adam')
+    model.summary()
+    return model
+
+
+def get_model():
+    if os.path.isfile(MODEL_FILE):
+        return keras.models.load_model(MODEL_FILE)
+
+    return create_model()
+
+
 def main():
     conn = sqlite3.connect('../history/poloniex_0.1.db')
     conn.row_factory = sqlite3.Row
@@ -105,12 +132,40 @@ def main():
     rows = normalize_values(rows)
     rows = normalize_dates(rows)
 
-    # x = [row['start'] for row in rows]
-    # y = [row['close'] for row in rows]
-    # c = [('r' if row['will_go_up'] == 1 else 'b') for row in rows]
-    # plt.scatter(x, y, c=c)
-    # plt.plot(x, y)
-    # plt.show()
+    data = [[r['weekday'], r['time'], r['open'], r['close'], r['high'],
+             r['low'], r['volume'], r['trades'], r['will_go_up']] for r in rows]
+
+    scaler = MinMaxScaler(feature_range=(-1, 1))
+    data = scaler.fit_transform(data)
+
+    scaler_export = {"min": scaler.data_min_.tolist(),
+                     "max": scaler.data_max_.tolist()}
+    print json.dumps(scaler_export)
+
+    data_windows = create_windows(data, window_size)
+    # data_windows = data_windows[:10]  # DELETE_ME
+    data_windows = numpy.array(data_windows)
+    X = data_windows[:, :, :-1]
+    y = data_windows[:, -1, -1]
+    # __import__('ipdb').set_trace()
+
+    # data_windows = numpy.array(data_windows).reshape(-1, window_size, features)
+
+    model = get_model()
+    while True:
+        epochs = 1
+        model.fit(X, y, epochs=epochs, verbose=1, validation_split=0.25)
+        model.save(MODEL_FILE)
+
+        # keras.callbacks.EarlyStopping(
+        #     monitor='val_loss', min_delta=0, patience=2, verbose=0, mode='auto')
+
+# x = [row['start'] for row in rows]
+# y = [row['close'] for row in rows]
+# c = [('r' if row['will_go_up'] == 1 else 'b') for row in rows]
+# plt.scatter(x, y, c=c)
+# plt.plot(x, y)
+# plt.show()
 
 
 main()
