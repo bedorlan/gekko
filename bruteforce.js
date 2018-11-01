@@ -7,14 +7,14 @@ const variables = [
   {
     name: 'short',
     start: 0,
-    end: -0.0014,
-    increment: 0.0002,
+    end: -0.0001,
+    increment: 0.00001,
   },
   {
     name: 'long',
     start: 0,
-    end: 0.0014,
-    increment: 0.0002,
+    end: 0.0001,
+    increment: 0.00001,
   },
   {
     name: 'weight',
@@ -24,17 +24,13 @@ const variables = [
   },
 ]
 
-const algorithm = 'my'
+// const algorithm = 'my'
+const algorithm = 'DEMA' // recuerda descomentar la primer linea de la funcion test
 // prettier-ignore
-const testTpl = {"watch":{"exchange":"poloniex","currency":"USDT","asset":"XRP"},"paperTrader":{"feeMaker":0.25,"feeTaker":0.25,"feeUsing":"maker","slippage":0.05,"simulationBalance":{"asset":1,"currency":100},"reportRoundtrips":true,"enabled":true},"tradingAdvisor":{"enabled":true,"method":"my","candleSize":5,"historySize":288},"my":{"weight":71,"long":0.0012,"short":-0.0014},"backtest":{"daterange":{"from":"2018-09-25T00:00:00Z","to":"2018-10-02T00:00:00Z"}},"backtestResultExporter":{"enabled":true,"writeToDisk":false,"data":{"stratUpdates":false,"roundtrips":true,"stratCandles":true,"stratCandleProps":["open"],"trades":true}},"performanceAnalyzer":{"riskFreeReturn":2,"enabled":true},"valid":true}
-// const algorithm = 'DEMA' // recuerda descomentar la primer linea de la funcion test
-// const testTpl = {"watch":{"exchange":"kraken","currency":"USD","asset":"XRP"},"paperTrader":{"feeMaker":0.25,"feeTaker":0.25,"feeUsing":"maker","slippage":0.05,"simulationBalance":{"asset":1,"currency":100},"reportRoundtrips":true,"enabled":true},"tradingAdvisor":{"enabled":true,"method":"DEMA","candleSize":12,"historySize":10},"DEMA":{"weight":21,"thresholds":{"down":-0.001,"up":0.001}},"backtest":{"daterange":{"from":"2018-08-05T00:00:00Z","to":"2018-08-17T00:00:00Z"}},"backtestResultExporter":{"enabled":true,"writeToDisk":false,"data":{"stratUpdates":false,"roundtrips":true,"stratCandles":true,"stratCandleProps":["open"],"trades":true}},"performanceAnalyzer":{"riskFreeReturn":2,"enabled":true},"valid":true}
-// prettier-ignore
-// const testTpl = {"watch":{"exchange":"poloniex","currency":"USDT","asset":"XRP"},"paperTrader":{"feeMaker":0.25,"feeTaker":0.25,"feeUsing":"maker","slippage":0.05,"simulationBalance":{"asset":1,"currency":100},"reportRoundtrips":true,"enabled":true},"tradingAdvisor":{"enabled":true,"method":"DEMA","candleSize":5,"historySize":288},"DEMA":{"weight":21,"thresholds":{"down":-0.025,"up":0.025}},"backtest":{"daterange":{"from":"2018-09-24T00:00:00Z","to":"2018-10-02T00:00:00Z"}},"backtestResultExporter":{"enabled":true,"writeToDisk":false,"data":{"stratUpdates":false,"roundtrips":true,"stratCandles":true,"stratCandleProps":["open"],"trades":true}},"performanceAnalyzer":{"riskFreeReturn":2,"enabled":true},"valid":true}
-// const testTpl = {"watch":{"exchange":"binance","currency":"USDT","asset":"XRP"},"paperTrader":{"feeMaker":0.25,"feeTaker":0.25,"feeUsing":"maker","slippage":0.05,"simulationBalance":{"asset":1,"currency":100},"reportRoundtrips":true,"enabled":true},"tradingAdvisor":{"enabled":true,"method":"DEMA","candleSize":12,"historySize":10},"DEMA":{"weight":21,"thresholds":{"down":-0.025,"up":0.025}},"backtest":{"daterange":{"from":"2018-08-05T00:00:00Z","to":"2018-08-17T00:00:00Z"}},"backtestResultExporter":{"enabled":true,"writeToDisk":false,"data":{"stratUpdates":false,"roundtrips":true,"stratCandles":true,"stratCandleProps":["open"],"trades":true}},"performanceAnalyzer":{"riskFreeReturn":2,"enabled":true},"valid":true}
+const testTpl = {"watch":{"exchange":"poloniex","currency":"USDT","asset":"XRP"},"paperTrader":{"feeMaker":0.25,"feeTaker":0.25,"feeUsing":"maker","slippage":0.05,"simulationBalance":{"asset":1,"currency":100},"reportRoundtrips":true,"enabled":true},"tradingAdvisor":{"enabled":true,"method":"DEMA","candleSize":5,"historySize":100},"DEMA":{"weight":21,"thresholds":{"down":-0.025,"up":0.025}},"backtest":{"daterange":{"from":"2018-10-01T00:00:00Z","to":"2018-10-03T00:00:00Z"}},"backtestResultExporter":{"enabled":true,"writeToDisk":false,"data":{"stratUpdates":false,"roundtrips":true,"stratCandles":true,"stratCandleProps":["open"],"trades":true}},"performanceAnalyzer":{"riskFreeReturn":2,"enabled":true},"valid":true}
 
 async function test(vars) {
-//   vars = { ...vars, thresholds: vars } // for DEMA
+  vars = { ...vars, thresholds: vars } // for DEMA
   const tpl = { ...testTpl, [algorithm]: vars }
   const response = await fetch('http://localhost:3000/api/backtest', {
     method: 'POST',
