@@ -4,6 +4,7 @@ import sqlite3
 from datetime import datetime
 import numpy
 import keras
+import sklearn
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 
@@ -12,9 +13,10 @@ sql = '''
 select start, open, high, low, close, volume, trades
 from candles_USDT_XRP
 where 1 = 1
-and trades > 0
-and start >= (1540907700 - 60 * 60 * 24 * 30) -- 1 month
---and start < (1540907700 - 604800 * 0)
+--and trades > 0
+--and start >= (1540907700 - 60 * 60 * 24 * 30) -- 1 month
+and start >= 1539648000 - 1440
+and start <= 1539648000
 order by start asc
 --limit 1000
 '''
@@ -89,7 +91,8 @@ def normalize_dates(rows):
         date = datetime.fromtimestamp(start)
 
         time = date.hour * 60 + date.minute
-        weekday = date.weekday()
+        weekday = date.weekday()  # FIXME
+        # weekday = date.isoweekday()
 
         row['time'] = time
         row['weekday'] = weekday
@@ -100,6 +103,7 @@ def normalize_dates(rows):
 window_size = 1440
 features = 8
 MODEL_FILE = 'models/out.model'
+SCALER_FILE = 'models/out.scaler'
 
 
 def create_model():
@@ -135,8 +139,16 @@ def main():
     data = [[r['weekday'], r['time'], r['open'], r['close'], r['high'],
              r['low'], r['volume'], r['trades'], r['will_go_up']] for r in rows]
 
-    scaler = MinMaxScaler(feature_range=(-1, 1))
-    data = scaler.fit_transform(data)
+    # scaler = MinMaxScaler(feature_range=(-1, 1))
+    # scaler.fit(data)
+    # sklearn.externals.joblib.dump(scaler, SCALER_FILE)
+    scaler = sklearn.externals.joblib.load(SCALER_FILE)
+    data = scaler.transform(data)
+
+    for r in rows:
+        # print json.dumps(r.tolist())
+        print json.dumps(r)
+    return
 
     scaler_export = {"min": scaler.data_min_.tolist(),
                      "max": scaler.data_max_.tolist()}
