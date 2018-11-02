@@ -1,6 +1,6 @@
+const { spawn } = require('child_process')
+const fs = require('fs')
 const log = require('../core/log.js')
-const tf = require('@tensorflow/tfjs')
-require('@tensorflow/tfjs-node')
 log.debug = console.log
 
 const time_steps = 1440
@@ -40,8 +40,9 @@ method.init = async function() {
       1.0,
     ],
   }
-  const model = await tf.loadModel(`file://${__dirname}/modelsjs/model.json`)
-  this.model = model
+  // const predictor = spawn('python', ['./trainer/predict.py'])
+  // this.predictor = predictor
+  // this.predictor.stderr.on('data', data => console.error(data.toString()))
 }
 
 // what happens on every new candle?
@@ -70,19 +71,44 @@ method.check = function(candle) {
     return
   }
 
-  const normalizedCandles = normalizeCandles(this.candles)
-  const scaledCandles = scaleCandles(this.scaler, normalizedCandles)
-  const tensor = tf.tensor3d([scaledCandles])
-  const prediction = this.model.predict(tensor)
-  prediction.print()
+  if (this.investment == null) {
+    const normalizedCandles = normalizeCandles(this.candles)
+    const scaledCandles = scaleCandles(this.scaler, normalizedCandles)
+
+    fs.appendFileSync('./fifoin', JSON.stringify(scaledCandles))
+    let result = fs.readFileSync('./fifoout')
+    let prediction = JSON.parse(result)[0][0]
+    console.log('prediction')
+
+    if (prediction < 0) {
+      return
+    }
+    this.investment = {
+      price: candle.close,
+      start: Date.now(),
+    }
+    console.log('long!')
+    this.advice('long')
+  } else {
+    console.log(
+      this.investment.price,
+      this.investment.price * 1.013,
+      candle.close,
+    )
+    if (candle.close >= this.investment.price * 1.013) {
+      this.investment = null
+      console.log('short!')
+      this.advice('short')
+    }
+  }
 }
 
-// method.end = function() {
-//   const normalizedCandles = normalizeCandles(this.candles)
-//   const scaledCandles = scaleCandles(this.scaler, normalizedCandles)
-//   scaledCandles.forEach(candle => console.log(candle))
-//   //   this.candles.forEach(candle => console.log(candle))
-// }
+method.end = function() {
+  if (this.predictor != null) {
+    this.predictor.kill()
+    this.predictor = null
+  }
+}
 
 function normalizeCandles(candles) {
   let prev = candles[0]
