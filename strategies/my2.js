@@ -51,7 +51,7 @@ method.check = function(candle) {
     }
 
     const normalizedCandles = normalizeCandles(this.candles)
-    const scaledCandles = scaleCandles(normalizedCandles)
+    const scaledCandles = toCandlesArray(normalizedCandles)
 
     // console.log(JSON.stringify(scaledCandles[scaledCandles.length - 1]))
     // return
@@ -105,7 +105,7 @@ function normalizeCandles(candles) {
   })
 }
 
-function scaleCandles(candles) {
+function toCandlesArray(candles) {
   return candles.map(candle => {
     return [
       candle.weekday,
