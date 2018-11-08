@@ -30,7 +30,7 @@ method.update = function() {
     return
   }
 
-  candle.weekday = (candle.start.weekday() + 6) % 7 // FIXME
+  candle.weekday = candle.start.isoWeekday()
   candle.time = candle.start.hours() * 60 + candle.start.minutes()
 
   this.candles.push(candle)
@@ -58,14 +58,14 @@ method.check = function(candle) {
     fs.appendFileSync('./fifoin', JSON.stringify(scaledCandles))
     let result = fs.readFileSync('./fifoout')
     let prediction = JSON.parse(result)[0][1]
-    console.log('prediction', prediction)
+    // console.log('prediction', prediction)
 
     if (prediction < 0.5) {
       return
     }
     this.investment = {
       price: candle.close,
-      start: Date.now(),
+      start: candle.start,
     }
     console.log('long!')
     this.advice('long')
@@ -74,8 +74,13 @@ method.check = function(candle) {
       this.investment.price,
       this.investment.price * 1.013,
       candle.close,
+      'remaining',
+      3600 * 1000 - (candle.start - this.investment.start),
     )
-    if (candle.close >= this.investment.price * 1.013) {
+    if (
+      candle.close >= this.investment.price * 1.013 ||
+      candle.start - this.investment.start > 1000 * 3600
+    ) {
       this.investment = null
       console.log('short!')
       this.advice('short')
