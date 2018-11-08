@@ -20,9 +20,14 @@ def get_model(path):
     return keras.models.load_model(path + '/' + MODEL_FILE)
 
 
+def get_scaler(path):
+    return sklearn.externals.joblib.load(path + '/' + SCALER_FILE)
+
+
 def main():
     mypathname = os.path.dirname(sys.argv[0])
     model = get_model(mypathname)
+    scaler = get_scaler(mypathname)
     while True:
         sys.stderr.write('waiting from fifoin\n')
         with open(mypathname + '/../fifoin', 'r') as fifoin:
@@ -30,6 +35,7 @@ def main():
 
         sys.stderr.write('new data arrived!\n')
         data = ast.literal_eval(line)
+        data = scaler.transform(data)
         data = numpy.array(data).reshape(1, 1440, 8)
         result = model.predict(data)
         sys.stderr.write('writing to fifoout\n')
