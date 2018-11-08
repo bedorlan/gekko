@@ -113,8 +113,8 @@ function normalizeCandles(candles) {
 function toCandlesArray(candles) {
   return candles.map(candle => {
     return [
-      candle.weekday,
-      candle.time,
+      // candle.weekday,
+      // candle.time,
       candle.open,
       candle.close,
       candle.high,
