@@ -8,17 +8,21 @@ import sklearn
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 
+# import ipdb
+
 
 sql = '''
 select start, open, high, low, close, volume, trades
 from candles_USDT_XRP
 where 1 = 1
---and trades > 0
---and start >= (1540907700 - 60 * 60 * 24 * 30) -- 1 month
-and start >= 1539648000 - 1440
-and start <= 1539648000
+
+and trades > 0
+and start >= 1538370000
+and start <= 1538370000 + (60 * 60 * 24 * 28)
 order by start asc
---limit 1000
+
+--and start >= 1539648000 - 1440
+--and start <= 1539648000
 '''
 
 
@@ -108,12 +112,12 @@ SCALER_FILE = 'models/out.scaler'
 
 def create_model():
     model = keras.Sequential()
-    model.add(keras.layers.LSTM(100, input_shape=(
+    model.add(keras.layers.LSTM(5, input_shape=(
         window_size, features), return_sequences=True))
     model.add(keras.layers.Flatten())
     model.add(keras.layers.Dropout(0.2))
-    model.add(keras.layers.Dense(1, activation='linear'))
-    model.compile(loss='mse', optimizer='adam')
+    model.add(keras.layers.Dense(2, activation='softmax'))
+    model.compile(loss='sparse_categorical_crossentropy', optimizer='adam')
     model.summary()
     return model
 
@@ -137,29 +141,23 @@ def main():
     rows = normalize_dates(rows)
 
     data = [[r['weekday'], r['time'], r['open'], r['close'], r['high'],
-             r['low'], r['volume'], r['trades'], r['will_go_up']] for r in rows]
+             r['low'], r['volume'], r['trades']] for r in rows]
 
-    # scaler = MinMaxScaler(feature_range=(-1, 1))
-    # scaler.fit(data)
-    # sklearn.externals.joblib.dump(scaler, SCALER_FILE)
-    scaler = sklearn.externals.joblib.load(SCALER_FILE)
+    scaler = MinMaxScaler(feature_range=(-1, 1))
+    scaler.fit(data)
+    sklearn.externals.joblib.dump(scaler, SCALER_FILE)
+    # scaler = sklearn.externals.joblib.load(SCALER_FILE)
     data = scaler.transform(data)
 
-    for r in rows:
-        # print json.dumps(r.tolist())
-        print json.dumps(r)
-    return
-
-    scaler_export = {"min": scaler.data_min_.tolist(),
-                     "max": scaler.data_max_.tolist()}
-    print json.dumps(scaler_export)
-
+    data = numpy.insert(
+        data, features, [r['will_go_up'] for r in rows], axis=1)
     data_windows = create_windows(data, window_size)
     # data_windows = data_windows[:10]  # DELETE_ME
     data_windows = numpy.array(data_windows)
     X = data_windows[:, :, :-1]
     y = data_windows[:, -1, -1]
-    # __import__('ipdb').set_trace()
+    # ipdb.set_trace()
+    # y = keras.utils.to_categorical(y, num_classes=2)
 
     # data_windows = numpy.array(data_windows).reshape(-1, window_size, features)
 
