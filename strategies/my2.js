@@ -18,28 +18,6 @@ method.init = async function() {
   //   this.requiredHistory = this.tradingAdvisor.historySize
   this.requiredHistory = time_steps
   this.candles = []
-  this.scaler = {
-    max: [
-      6.0, // weekday
-      1439.0, // time
-      1.015393945472186, // open
-      1.0293323265306125, // close
-      1.0293323265306125, // high
-      1.015393945472186, // low
-      534925.0501319598, // volume
-      179.0, // trades
-    ],
-    min: [
-      0.0,
-      0.0,
-      0.9866715722845655,
-      0.9709941227278409,
-      0.9866715722845655,
-      0.9622640075179876,
-      2.82e-6,
-      1.0,
-    ],
-  }
   // const predictor = spawn('python', ['./trainer/predict.py'])
   // this.predictor = predictor
   // this.predictor.stderr.on('data', data => console.error(data.toString()))
@@ -66,21 +44,23 @@ method.update = function() {
 method.log = function() {}
 
 method.check = function(candle) {
-  if (this.candles.length != time_steps + 1) {
-    // console.log('not ready', this.candles.length)
-    return
-  }
-
   if (this.investment == null) {
-    const normalizedCandles = normalizeCandles(this.candles)
-    const scaledCandles = scaleCandles(this.scaler, normalizedCandles)
+    if (candle.trades < 1.0 || this.candles.length != time_steps + 1) {
+      // console.log('not ready', this.candles.length)
+      return
+    }
 
+    const normalizedCandles = normalizeCandles(this.candles)
+    const scaledCandles = scaleCandles(normalizedCandles)
+
+    // console.log(JSON.stringify(scaledCandles[scaledCandles.length - 1]))
+    // return
     fs.appendFileSync('./fifoin', JSON.stringify(scaledCandles))
     let result = fs.readFileSync('./fifoout')
-    let prediction = JSON.parse(result)[0][0]
-    console.log('prediction')
+    let prediction = JSON.parse(result)[0][1]
+    console.log('prediction', prediction)
 
-    if (prediction < 0) {
+    if (prediction < 0.5) {
       return
     }
     this.investment = {
@@ -125,9 +105,9 @@ function normalizeCandles(candles) {
   })
 }
 
-function scaleCandles(scaler, candles) {
+function scaleCandles(candles) {
   return candles.map(candle => {
-    candle = [
+    return [
       candle.weekday,
       candle.time,
       candle.open,
@@ -137,7 +117,7 @@ function scaleCandles(scaler, candles) {
       candle.volume,
       candle.trades,
     ]
-    return scaler.min.map((min, i) => scale(min, scaler.max[i], candle[i]))
+    // return scaler.min.map((min, i) => scale(min, scaler.max[i], candle[i]))
   })
 }
 
