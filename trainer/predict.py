@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 
 window_size = 1440
-features = 8
+features = 6
 MODEL_FILE = 'models/out.model'
 SCALER_FILE = 'models/out.scaler'
 
@@ -29,16 +29,15 @@ def main():
     model = get_model(mypathname)
     scaler = get_scaler(mypathname)
     while True:
-        sys.stderr.write('waiting from fifoin\n')
+        # sys.stderr.write('waiting from fifoin\n')
         with open(mypathname + '/../fifoin', 'r') as fifoin:
             line = fifoin.read()
 
-        sys.stderr.write('new data arrived!\n')
         data = ast.literal_eval(line)
         data = scaler.transform(data)
-        data = numpy.array(data).reshape(1, 1440, 8)
+        data = numpy.array(data).reshape(1, window_size, features)
         result = model.predict(data)
-        sys.stderr.write('writing to fifoout\n')
+        # sys.stderr.write('writing to fifoout\n')
         with open(mypathname + '/../fifoout', 'a') as fifoout:
             fifoout.write(str(result.tolist()))
 

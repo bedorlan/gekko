@@ -95,8 +95,7 @@ def normalize_dates(rows):
         date = datetime.fromtimestamp(start)
 
         time = date.hour * 60 + date.minute
-        weekday = date.weekday()  # FIXME
-        # weekday = date.isoweekday()
+        weekday = date.isoweekday()
 
         row['time'] = time
         row['weekday'] = weekday
@@ -105,7 +104,7 @@ def normalize_dates(rows):
 
 
 window_size = 1440
-features = 8
+features = 6
 MODEL_FILE = 'models/out.model'
 SCALER_FILE = 'models/out.scaler'
 
@@ -117,7 +116,9 @@ def create_model():
     model.add(keras.layers.Flatten())
     model.add(keras.layers.Dropout(0.2))
     model.add(keras.layers.Dense(2, activation='softmax'))
-    model.compile(loss='sparse_categorical_crossentropy', optimizer='adam')
+    model.compile(loss='sparse_categorical_crossentropy',
+                  optimizer='adam',
+                  metrics=['sparse_categorical_accuracy'])
     model.summary()
     return model
 
@@ -127,6 +128,15 @@ def get_model():
         return keras.models.load_model(MODEL_FILE)
 
     return create_model()
+
+
+def draw_will_go_up(rows):
+    x = [row['start'] for row in rows]
+    y = [row['close'] for row in rows]
+    c = [('r' if row['will_go_up'] == 1 else 'b') for row in rows]
+    plt.scatter(x, y, c=c)
+    plt.plot(x, y)
+    plt.show()
 
 
 def main():
@@ -140,14 +150,19 @@ def main():
     rows = normalize_values(rows)
     rows = normalize_dates(rows)
 
-    data = [[r['weekday'], r['time'], r['open'], r['close'], r['high'],
-             r['low'], r['volume'], r['trades']] for r in rows]
+    # draw_will_go_up(rows)
+    # return
+
+    raw_data = [[
+        # r['weekday'], r['time'],
+        r['open'], r['close'], r['high'],
+        r['low'], r['volume'], r['trades']] for r in rows]
 
     scaler = MinMaxScaler(feature_range=(-1, 1))
-    scaler.fit(data)
+    scaler.fit(raw_data)
     sklearn.externals.joblib.dump(scaler, SCALER_FILE)
     # scaler = sklearn.externals.joblib.load(SCALER_FILE)
-    data = scaler.transform(data)
+    data = scaler.transform(raw_data)
 
     data = numpy.insert(
         data, features, [r['will_go_up'] for r in rows], axis=1)
@@ -169,13 +184,6 @@ def main():
 
         # keras.callbacks.EarlyStopping(
         #     monitor='val_loss', min_delta=0, patience=2, verbose=0, mode='auto')
-
-# x = [row['start'] for row in rows]
-# y = [row['close'] for row in rows]
-# c = [('r' if row['will_go_up'] == 1 else 'b') for row in rows]
-# plt.scatter(x, y, c=c)
-# plt.plot(x, y)
-# plt.show()
 
 
 main()
