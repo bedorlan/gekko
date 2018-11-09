@@ -68,14 +68,14 @@ def add_will_go_up(rows):
 
 
 window_size = 1440
-features = 7
+features = normalizer.features
 MODEL_FILE = 'models/out.model'
 SCALER_FILE = 'models/out.scaler'
 
 
 def create_model():
     model = keras.Sequential()
-    model.add(keras.layers.LSTM(5, input_shape=(
+    model.add(keras.layers.LSTM(10, input_shape=(
         window_size, features), return_sequences=True))
     model.add(keras.layers.Flatten())
     model.add(keras.layers.Dropout(0.2))
@@ -111,8 +111,8 @@ def main():
 
     rows = [dict(row) for row in rows]
     rows = add_will_go_up(rows)
-    rows = normalizer.normalize_values(rows)
     rows = normalizer.normalize_dates(rows)
+    rows = normalizer.normalize_values(rows)
 
     # draw_will_go_up(rows)
     # return
