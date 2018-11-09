@@ -13,7 +13,7 @@ const time_steps = 1440
 var method = {}
 
 // prepare everything our method needs
-method.init = async function() {
+method.init = function() {
   this.name = 'my2'
   //   this.requiredHistory = this.tradingAdvisor.historySize
   this.requiredHistory = time_steps
