@@ -1,12 +1,12 @@
 import os
 import json
 import sqlite3
-from datetime import datetime
 import numpy
 import keras
 import sklearn
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
+import normalizer
 
 # import ipdb
 
@@ -67,42 +67,6 @@ def add_will_go_up(rows):
     return rows
 
 
-def normalize_values(rows):
-    prev_close = rows[0]['close']
-    rows = rows[1:]
-
-    for row in rows:
-        open, high, low, close = row['open'], row['high'], row['low'], row['close']
-
-        new_open = open / prev_close
-        new_high = high / prev_close
-        new_low = low / prev_close
-        new_close = close / prev_close
-
-        row['open'] = new_open
-        row['high'] = new_high
-        row['low'] = new_low
-        row['close'] = new_close
-
-        prev_close = close
-
-    return rows
-
-
-def normalize_dates(rows):
-    for row in rows:
-        start = row['start']
-        date = datetime.fromtimestamp(start)
-
-        time = date.hour * 60 + date.minute
-        weekday = date.isoweekday()
-
-        row['time'] = time
-        row['weekday'] = weekday
-
-    return rows
-
-
 window_size = 1440
 features = 7
 MODEL_FILE = 'models/out.model'
@@ -147,17 +111,13 @@ def main():
 
     rows = [dict(row) for row in rows]
     rows = add_will_go_up(rows)
-    rows = normalize_values(rows)
-    rows = normalize_dates(rows)
+    rows = normalizer.normalize_values(rows)
+    rows = normalizer.normalize_dates(rows)
 
     # draw_will_go_up(rows)
     # return
 
-    raw_data = [[
-        # r['weekday'],
-        r['time'],
-        r['open'], r['close'], r['high'],
-        r['low'], r['volume'], r['trades']] for r in rows]
+    raw_data = normalizer.to_array(rows)
 
     scaler = MinMaxScaler(feature_range=(-1, 1))
     scaler.fit(raw_data)

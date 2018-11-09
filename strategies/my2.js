@@ -31,8 +31,7 @@ method.update = function() {
     return
   }
 
-  candle.weekday = candle.start.isoWeekday()
-  candle.time = candle.start.hours() * 60 + candle.start.minutes()
+  candle.start = candle.start.unix()
 
   this.candles.push(candle)
   if (this.candles.length > time_steps + 1) {
@@ -51,12 +50,9 @@ method.check = function(candle) {
       return
     }
 
-    const normalizedCandles = normalizeCandles(this.candles)
-    const scaledCandles = toCandlesArray(normalizedCandles)
-
     // console.log(JSON.stringify(scaledCandles[scaledCandles.length - 1]))
     // return
-    fs.appendFileSync('./fifoin', JSON.stringify(scaledCandles))
+    fs.appendFileSync('./fifoin', JSON.stringify(this.candles))
     let result = fs.readFileSync('./fifoout')
     let prediction = JSON.parse(result)[0][1]
     // console.log('prediction', prediction)
@@ -103,43 +99,6 @@ method.end = function() {
     this.predictor.kill()
     this.predictor = null
   }
-}
-
-function normalizeCandles(candles) {
-  let prev = candles[0]
-  return candles.slice(1).map(candle => {
-    const newCandle = {
-      ...candle,
-      open: candle.open / prev.close,
-      high: candle.high / prev.close,
-      low: candle.low / prev.close,
-      close: candle.close / prev.close,
-    }
-    prev = candle
-    return newCandle
-  })
-}
-
-function toCandlesArray(candles) {
-  return candles.map(candle => {
-    return [
-      // candle.weekday,
-      candle.time,
-      candle.open,
-      candle.close,
-      candle.high,
-      candle.low,
-      candle.volume,
-      candle.trades,
-    ]
-    // return scaler.min.map((min, i) => scale(min, scaler.max[i], candle[i]))
-  })
-}
-
-function scale(min, max, x) {
-  const scaled = (x - min) / (max - min)
-  const ranged = scaled * 2.0 - 1.0
-  return ranged
 }
 
 module.exports = method

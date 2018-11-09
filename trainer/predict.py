@@ -8,6 +8,7 @@ import keras
 import sklearn
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
+import normalizer
 
 
 window_size = 1440
@@ -33,7 +34,11 @@ def main():
         with open(mypathname + '/../fifoin', 'r') as fifoin:
             line = fifoin.read()
 
+        # __import__('ipdb').set_trace()
         data = ast.literal_eval(line)
+        data = normalizer.normalize_dates(data)
+        data = normalizer.normalize_values(data)
+        data = normalizer.to_array(data)
         data = scaler.transform(data)
         data = numpy.array(data).reshape(1, window_size, features)
         result = model.predict(data)
