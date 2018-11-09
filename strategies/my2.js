@@ -54,8 +54,9 @@ method.check = function(candle) {
     // return
     fs.appendFileSync('./fifoin', JSON.stringify(this.candles))
     let result = fs.readFileSync('./fifoout')
-    let prediction = JSON.parse(result)[0][1]
+    let prediction = JSON.parse(result)[0][0]
     // console.log('prediction', prediction)
+    // return
 
     if (prediction >= 0.5) {
       console.log('up!', candle.start.toString())

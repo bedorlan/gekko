@@ -17,8 +17,8 @@ from candles_USDT_XRP
 where 1 = 1
 
 and trades > 0
-and start >= 1535778000
-and start <= 1535778000 + (60 * 60 * 24 * 61)
+and start >= 1538370000
+and start <= 1538370000 + (60 * 60 * 24 * 31)
 order by start asc
 
 --and start >= 1539648000 - 1440
@@ -77,13 +77,13 @@ def create_model():
     model = keras.Sequential()
     model.add(keras.layers.LSTM(8, input_shape=(
         window_size, features), return_sequences=True))
-    model.add(keras.layers.LSTM(3, return_sequences=True))
+    model.add(keras.layers.LSTM(2, return_sequences=True))
     model.add(keras.layers.Flatten())
     # model.add(keras.layers.Dropout(0.2))
-    model.add(keras.layers.Dense(2, activation='softmax'))
-    model.compile(loss='sparse_categorical_crossentropy',
+    model.add(keras.layers.Dense(1, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy',
                   optimizer='adam',
-                  metrics=['sparse_categorical_accuracy'])
+                  metrics=['binary_accuracy'])
     model.summary()
     return model
 
