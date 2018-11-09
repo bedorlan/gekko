@@ -18,6 +18,7 @@ method.init = async function() {
   //   this.requiredHistory = this.tradingAdvisor.historySize
   this.requiredHistory = time_steps
   this.candles = []
+  this.up_tendencies = 0
   // const predictor = spawn('python', ['./trainer/predict.py'])
   // this.predictor = predictor
   // this.predictor.stderr.on('data', data => console.error(data.toString()))
@@ -60,9 +61,17 @@ method.check = function(candle) {
     let prediction = JSON.parse(result)[0][1]
     // console.log('prediction', prediction)
 
-    if (prediction < 0.5) {
+    if (prediction >= 0.5) {
+      console.log('up!')
+      this.up_tendencies += 1
+    } else {
+      this.up_tendencies = 0
+    }
+
+    if (this.up_tendencies < 3) {
       return
     }
+
     this.investment = {
       price: candle.close,
       start: candle.start,
@@ -82,6 +91,7 @@ method.check = function(candle) {
       candle.start - this.investment.start > 1000 * 3600
     ) {
       this.investment = null
+      this.up_tendencies = 0
       console.log('short!')
       this.advice('short')
     }
