@@ -9,7 +9,7 @@ def normalize_values(rows):
         start, open, high, low, close = row['start'], row['open'], row['high'], row['low'], row['close']
         prev_close = prev['close']
 
-        new_start = start / prev['start']
+        new_start = (start + 0.0) / prev['start']
         new_open = open / prev_close
         new_high = high / prev_close
         new_low = low / prev_close
