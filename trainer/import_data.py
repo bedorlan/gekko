@@ -132,7 +132,6 @@ def main():
     data_windows = numpy.array(data_windows)
     X = data_windows[:, :, :-1]
     y = data_windows[:, -1, -1]
-    # ipdb.set_trace()
     # y = keras.utils.to_categorical(y, num_classes=2)
 
     # data_windows = numpy.array(data_windows).reshape(-1, window_size, features)
