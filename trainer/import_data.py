@@ -104,7 +104,7 @@ def normalize_dates(rows):
 
 
 window_size = 1440
-features = 6
+features = 7
 MODEL_FILE = 'models/out.model'
 SCALER_FILE = 'models/out.scaler'
 
@@ -154,7 +154,8 @@ def main():
     # return
 
     raw_data = [[
-        # r['weekday'], r['time'],
+        # r['weekday'],
+        r['time'],
         r['open'], r['close'], r['high'],
         r['low'], r['volume'], r['trades']] for r in rows]
 

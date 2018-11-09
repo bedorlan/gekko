@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 
 window_size = 1440
-features = 6
+features = 7
 MODEL_FILE = 'models/out.model'
 SCALER_FILE = 'models/out.scaler'
 

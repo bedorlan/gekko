@@ -124,7 +124,7 @@ function toCandlesArray(candles) {
   return candles.map(candle => {
     return [
       // candle.weekday,
-      // candle.time,
+      candle.time,
       candle.open,
       candle.close,
       candle.high,
