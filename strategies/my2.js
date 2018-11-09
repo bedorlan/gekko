@@ -80,7 +80,7 @@ method.check = function(candle) {
       this.investment.price * 1.013,
       candle.close,
       'remaining',
-      3600 * 1000 - (candle.start - this.investment.start),
+      (3600 * 1000 - (candle.start - this.investment.start)) / 60000,
     )
     if (
       candle.close >= this.investment.price * 1.013 ||
