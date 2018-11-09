@@ -58,7 +58,7 @@ method.check = function(candle) {
     // console.log('prediction', prediction)
 
     if (prediction >= 0.5) {
-      console.log('up!')
+      console.log('up!', candle.start.toString())
       this.up_tendencies += 1
     } else {
       this.up_tendencies = 0
@@ -88,7 +88,7 @@ method.check = function(candle) {
     ) {
       this.investment = null
       this.up_tendencies = 0
-      console.log('short!')
+      console.log('short!', candle.start.toString())
       this.advice('short')
     }
   }
