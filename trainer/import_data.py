@@ -10,19 +10,22 @@ import normalizer
 
 # import ipdb
 
-
 sql = '''
 select start, open, high, low, close, volume, trades
 from candles_USDT_XRP
 where 1 = 1
 
 and trades > 0
+--and start >= 1535778000
+--and start <= 1535778000 + (60 * 60 * 24 * 61)
+
 and start >= 1538370000
 and start <= 1538370000 + (60 * 60 * 24 * 31)
-order by start asc
 
---and start >= 1539648000 - 1440
---and start <= 1539648000
+--and start >= 1538370000
+--and start <= 1538370000 + (60 * 60 * 24 * 2)
+
+order by start asc
 '''
 
 
