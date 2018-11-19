@@ -4,11 +4,10 @@ import sqlite3
 import numpy
 import keras
 import sklearn
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import RobustScaler as Scaler
 import matplotlib.pyplot as plt
 import normalizer
 
-# import ipdb
 
 sql = '''
 select start, open, high, low, close, volume, trades
@@ -78,15 +77,12 @@ SCALER_FILE = 'models/out.scaler'
 
 def create_model():
     model = keras.Sequential()
-    model.add(keras.layers.LSTM(8, input_shape=(
-        window_size, features), return_sequences=True))
-    model.add(keras.layers.LSTM(2, return_sequences=True))
-    model.add(keras.layers.Flatten())
-    # model.add(keras.layers.Dropout(0.2))
+    model.add(keras.layers.LSTM(2, input_shape=(
+        window_size, features), return_sequences=False))
     model.add(keras.layers.Dense(1, activation='sigmoid'))
     model.compile(loss='binary_crossentropy',
                   optimizer='adam',
-                  metrics=['binary_accuracy'])
+                  metrics=['accuracy'])
     model.summary()
     return model
 
@@ -123,7 +119,7 @@ def main():
 
     raw_data = normalizer.to_array(rows)
 
-    scaler = MinMaxScaler(feature_range=(-1, 1))
+    scaler = Scaler()
     scaler.fit(raw_data)
     sklearn.externals.joblib.dump(scaler, SCALER_FILE)
     # scaler = sklearn.externals.joblib.load(SCALER_FILE)
