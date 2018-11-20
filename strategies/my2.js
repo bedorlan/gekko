@@ -41,7 +41,9 @@ method.update = function() {
 
 // for debugging purposes: log the last calculated
 // EMAs and diff.
-method.log = function() {}
+// method.log = function() {}
+
+const up_predictions_required = 3
 
 method.check = function(candle) {
   if (this.investment == null) {
@@ -66,7 +68,7 @@ method.check = function(candle) {
       this.up_tendencies = 0
     }
 
-    if (this.up_tendencies < 3) {
+    if (this.up_tendencies < up_predictions_required) {
       return
     }
 

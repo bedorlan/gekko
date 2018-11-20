@@ -13,19 +13,29 @@ sql = '''
 select start, open, high, low, close, volume, trades
 from candles_USDT_XRP
 where 1 = 1
-
 and trades > 0
---and start >= 1535778000
---and start <= 1535778000 + (60 * 60 * 24 * 61)
 
+-- julio
+--and start >= 1530421200
+--and start <= 1530421200 + (60 * 60 * 24 * 92)
+
+-- agosto
+--and start >= 1533099600
+--and start <= 1533099600 + (60 * 60 * 24 * 92)
+
+-- octubre
 and start >= 1538370000
 and start <= 1538370000 + (60 * 60 * 24 * 31)
 
---and start >= 1538370000
---and start <= 1538370000 + (60 * 60 * 24 * 2)
+--and start >= 1538370000 + (60 * 60 * 24 * 10)
+--and start <= 1538370000 + (60 * 60 * 24 * 11)
 
 order by start asc
 '''
+
+up_search_interval = 60
+up_duration = 10
+expected_profit = 1.013
 
 
 def search_up(i, rows):
@@ -38,14 +48,14 @@ def search_up(i, rows):
             break
 
         future_start, future_close = rows[j]['start'], rows[j]['close']
-        if future_start - start > 60 * 60:
+        if future_start - start > 60 * up_search_interval:
             start_up = None
             break
 
-        if start_up is not None and future_start - start_up > 60 * 5:
+        if start_up is not None and future_start - start_up > 60 * up_duration:
             break
 
-        if future_close / close >= 1.013:
+        if future_close / close >= expected_profit:
             if start_up is None:
                 start_up = future_start
         else:
@@ -77,21 +87,28 @@ SCALER_FILE = 'models/out.scaler'
 
 def create_model():
     model = keras.Sequential()
-    model.add(keras.layers.LSTM(2, input_shape=(
-        window_size, features), return_sequences=False))
-    model.add(keras.layers.Dense(1, activation='sigmoid'))
+    model.add(keras.layers.LSTM(10,
+                                input_shape=(window_size, features),
+                                return_sequences=False
+                                ))
+    # model.add(keras.layers.LSTM(6))
+    model.add(keras.layers.Dense(1,
+                                 activation='sigmoid'
+                                 ))
     model.compile(loss='binary_crossentropy',
                   optimizer='adam',
                   metrics=['accuracy'])
-    model.summary()
     return model
 
 
 def get_model():
+    model = None
     if os.path.isfile(MODEL_FILE):
-        return keras.models.load_model(MODEL_FILE)
-
-    return create_model()
+        model = keras.models.load_model(MODEL_FILE)
+    else:
+        model = create_model()
+    model.summary()
+    return model
 
 
 def draw_will_go_up(rows):
@@ -139,7 +156,7 @@ def main():
     model = get_model()
     while True:
         epochs = 1
-        model.fit(X, y, epochs=epochs, verbose=1, validation_split=0.25)
+        model.fit(X, y, epochs=epochs, verbose=1, validation_split=(1.0/4))
         model.save(MODEL_FILE)
 
         # keras.callbacks.EarlyStopping(
