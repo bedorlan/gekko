@@ -139,20 +139,16 @@ def main():
     scaler = Scaler()
     scaler.fit(raw_data)
     sklearn.externals.joblib.dump(scaler, SCALER_FILE)
-    # scaler = sklearn.externals.joblib.load(SCALER_FILE)
     data = scaler.transform(raw_data)
 
     data = numpy.insert(
         data, features, [r['will_go_up'] for r in rows], axis=1)
+
     data_windows = create_windows(data, window_size)
-    # data_windows = data_windows[:10]  # DELETE_ME
     data_windows = numpy.array(data_windows)
+
     X = data_windows[:, :, :-1]
     y = data_windows[:, -1, -1]
-    # y = keras.utils.to_categorical(y, num_classes=2)
-
-    # data_windows = numpy.array(data_windows).reshape(-1, window_size, features)
-
     model = get_model()
     while True:
         epochs = 1
