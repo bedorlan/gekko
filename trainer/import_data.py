@@ -4,7 +4,7 @@ import sqlite3
 import numpy
 import keras
 import sklearn
-from sklearn.preprocessing import RobustScaler as Scaler
+from sklearn.preprocessing import RobustScaler, MinMaxScaler
 import matplotlib.pyplot as plt
 import normalizer
 
@@ -27,6 +27,7 @@ and trades > 0
 and start >= 1538370000
 and start <= 1538370000 + (60 * 60 * 24 * 31)
 
+-- 1 day
 --and start >= 1538370000 + (60 * 60 * 24 * 10)
 --and start <= 1538370000 + (60 * 60 * 24 * 11)
 
@@ -86,18 +87,22 @@ SCALER_FILE = 'models/out.scaler'
 
 
 def create_model():
+    input_size = features * window_size
     model = keras.Sequential()
-    model.add(keras.layers.LSTM(10,
-                                input_shape=(window_size, features),
-                                return_sequences=False
-                                ))
-    # model.add(keras.layers.LSTM(6))
-    model.add(keras.layers.Dense(1,
-                                 activation='sigmoid'
+    model.add(keras.layers.Dense(2,
+                                 input_dim=input_size,
+                                 #  activation='relu'
                                  ))
-    model.compile(loss='binary_crossentropy',
+    model.add(keras.layers.Dense(2))
+    model.add(keras.layers.Dense(input_size, activation='sigmoid'))
+    model.compile(loss='mse',
                   optimizer='adam',
-                  metrics=['accuracy'])
+                  #   optimizer='sgd',
+                  metrics=[
+                      #   'acc',
+                      'mape',
+                  ],
+                  )
     return model
 
 
@@ -135,25 +140,56 @@ def main():
     # return
 
     raw_data = normalizer.to_array(rows)
+    data = raw_data
 
-    scaler = Scaler()
-    scaler.fit(raw_data)
-    sklearn.externals.joblib.dump(scaler, SCALER_FILE)
-    data = scaler.transform(raw_data)
+    scaler = RobustScaler()
+    scaler.fit(data)
+    data = scaler.transform(data)
+    scaler = MinMaxScaler()
+    scaler.fit(data)
+    data = scaler.transform(data)
+    # sklearn.externals.joblib.dump(scaler, SCALER_FILE)
 
     data = numpy.insert(
         data, features, [r['will_go_up'] for r in rows], axis=1)
 
     data_windows = create_windows(data, window_size)
+    data_windows = filter(lambda row: row[-1][-1] == 1, data_windows)
     data_windows = numpy.array(data_windows)
+    data_windows = data_windows[:, :, :-1]
+    data_windows = data_windows.reshape(-1, window_size * features)
 
-    X = data_windows[:, :, :-1]
-    y = data_windows[:, -1, -1]
+    X = data_windows[:12]
+    # X = data_windows
+    y = X
     model = get_model()
+
+    # y = model.predict(X)
+    # for i, _ in enumerate(X):
+    #     print i
+    #     print X[i].tolist()
+    #     print y[i].tolist()
+    # return
+
+    tensorboard = keras.callbacks.TensorBoard(log_dir='./tensorboard')
+    # learning_rate_reducer = keras.callbacks.ReduceLROnPlateau(monitor='loss')
+    save_model = keras.callbacks.ModelCheckpoint(MODEL_FILE + '.{val_loss:.5f}',
+                                                 monitor='val_loss',
+                                                 save_best_only=True,
+                                                 )
     while True:
-        epochs = 1
-        model.fit(X, y, epochs=epochs, verbose=1, validation_split=(1.0/4))
-        model.save(MODEL_FILE)
+        epochs = 1000
+        model.fit(X, y,
+                  epochs=epochs,
+                  verbose=1,
+                  validation_split=(1.0/4),
+                  callbacks=[
+                      #   learning_rate_reducer,
+                      save_model,
+                      #   tensorboard,
+                  ],
+                  )
+        # model.save(MODEL_FILE)
 
         # keras.callbacks.EarlyStopping(
         #     monitor='val_loss', min_delta=0, patience=2, verbose=0, mode='auto')
