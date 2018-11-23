@@ -21,12 +21,12 @@ and trades > 0
 --and start <= 1530421200 + (60 * 60 * 24 * 92)
 
 -- agosto
---and start >= 1533099600
---and start <= 1533099600 + (60 * 60 * 24 * 92)
+and start >= 1533099600
+and start <= 1533099600 + (60 * 60 * 24 * 92)
 
 -- octubre
-and start >= 1538370000
-and start <= 1538370000 + (60 * 60 * 24 * 31)
+--and start >= 1538370000
+--and start <= 1538370000 + (60 * 60 * 24 * 31)
 
 -- 1 day
 --and start >= 1538370000 + (60 * 60 * 24 * 10)
@@ -97,8 +97,8 @@ def create_model():
     model.add(keras.layers.Dense(2))
     model.add(keras.layers.Dense(input_size, activation='sigmoid'))
     model.compile(loss='mse',
-                  optimizer='adam',
-                  #   optimizer='sgd',
+                  #   optimizer='adam',
+                  optimizer='sgd',
                   metrics=[
                       #   'acc',
                       'mape',
@@ -192,10 +192,13 @@ def main():
     y = X
 
     params = {
-        "dense": (1, 101, 10),
+        "dense": (1, 1000, 10),
     }
     talos.Scan(X, y, params, talos_model,
-               dataset_name='201810', print_params=True)
+               shuffle=False, val_split=(1/3.0),
+               #    grid_downsample=0.1,
+               reduction_method='correlation', reduction_metric='val_loss', reduce_loss=True,
+               dataset_name='from201808duration3months', print_params=True)
 
     # y = model.predict(X)
     # for i, _ in enumerate(X):
