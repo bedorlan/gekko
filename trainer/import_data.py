@@ -97,8 +97,8 @@ def create_model():
     model.add(keras.layers.Dense(2))
     model.add(keras.layers.Dense(input_size, activation='sigmoid'))
     model.compile(loss='mse',
-                  #   optimizer='adam',
-                  optimizer='sgd',
+                  optimizer='adam',
+                  #   optimizer='sgd',
                   metrics=[
                       #   'acc',
                       'mape',
@@ -145,8 +145,9 @@ def talos_model(X, y, X_val, y_val, params):
 
     epochs = 1000000
     history = model.fit(X, y,
-                        epochs=epochs,
                         validation_data=[X_val, y_val],
+                        epochs=epochs,
+                        batch_size=params['batch_size'],
                         verbose=1,
                         callbacks=[early_stopper],
                         )
@@ -192,7 +193,8 @@ def main():
     y = X
 
     params = {
-        "dense": (1, 1000, 10),
+        "batch_size": [16, 32],
+        "dense": (1, 1000, 3),
     }
     talos.Scan(X, y, params, talos_model,
                shuffle=False, val_split=(1/3.0),
