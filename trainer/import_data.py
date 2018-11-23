@@ -139,14 +139,16 @@ def talos_model(X, y, X_val, y_val, params):
 
     early_stopper = keras.callbacks.EarlyStopping(monitor='val_loss',
                                                   patience=100,
-                                                  restore_best_weights=True)
+                                                  restore_best_weights=True,
+                                                  verbose=1,
+                                                  )
 
     epochs = 1000000
     history = model.fit(X, y,
                         epochs=epochs,
                         validation_data=[X_val, y_val],
-                        verbose=0,
-                        callbacks=[early_stopper]
+                        verbose=1,
+                        callbacks=[early_stopper],
                         )
     return history, model
 
