@@ -7,6 +7,7 @@ import sklearn
 from sklearn.preprocessing import RobustScaler, MinMaxScaler
 import matplotlib.pyplot as plt
 import normalizer
+import talos
 
 
 sql = '''
@@ -125,6 +126,31 @@ def draw_will_go_up(rows):
     plt.show()
 
 
+def talos_model(X, y, X_val, y_val, params):
+    input_size = features * window_size
+    model = keras.Sequential()
+    model.add(keras.layers.Dense(params['dense'],
+                                 input_dim=input_size,
+                                 #  activation='relu'
+                                 ))
+    model.add(keras.layers.Dense(params['dense']))
+    model.add(keras.layers.Dense(input_size, activation='sigmoid'))
+    model.compile(loss='mse', optimizer='adam')
+
+    early_stopper = keras.callbacks.EarlyStopping(monitor='val_loss',
+                                                  patience=100,
+                                                  restore_best_weights=True)
+
+    epochs = 1000000
+    history = model.fit(X, y,
+                        epochs=epochs,
+                        validation_data=[X_val, y_val],
+                        verbose=0,
+                        callbacks=[early_stopper]
+                        )
+    return history, model
+
+
 def main():
     conn = sqlite3.connect('../history/poloniex_0.1.db')
     conn.row_factory = sqlite3.Row
@@ -159,10 +185,15 @@ def main():
     data_windows = data_windows[:, :, :-1]
     data_windows = data_windows.reshape(-1, window_size * features)
 
-    X = data_windows[:12]
-    # X = data_windows
+    # X = data_windows[:12]
+    X = data_windows
     y = X
-    model = get_model()
+
+    params = {
+        "dense": (1, 101, 10),
+    }
+    talos.Scan(X, y, params, talos_model,
+               dataset_name='201810', print_params=True)
 
     # y = model.predict(X)
     # for i, _ in enumerate(X):
@@ -170,29 +201,6 @@ def main():
     #     print X[i].tolist()
     #     print y[i].tolist()
     # return
-
-    tensorboard = keras.callbacks.TensorBoard(log_dir='./tensorboard')
-    # learning_rate_reducer = keras.callbacks.ReduceLROnPlateau(monitor='loss')
-    save_model = keras.callbacks.ModelCheckpoint(MODEL_FILE + '.{val_loss:.5f}',
-                                                 monitor='val_loss',
-                                                 save_best_only=True,
-                                                 )
-    while True:
-        epochs = 1000
-        model.fit(X, y,
-                  epochs=epochs,
-                  verbose=1,
-                  validation_split=(1.0/4),
-                  callbacks=[
-                      #   learning_rate_reducer,
-                      save_model,
-                      #   tensorboard,
-                  ],
-                  )
-        # model.save(MODEL_FILE)
-
-        # keras.callbacks.EarlyStopping(
-        #     monitor='val_loss', min_delta=0, patience=2, verbose=0, mode='auto')
 
 
 main()
